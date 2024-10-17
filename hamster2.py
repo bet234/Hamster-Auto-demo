@@ -99,53 +99,11 @@ def get_account_info(authorization):
         response = requests.post(url, headers=headers)
         response.raise_for_status()  # Raise an exception for bad status codes
 
-        # Extract the balanceDiamonds field from the response
         balance_diamonds = response.json().get("interludeUser", {}).get("balanceDiamonds", 0)
         return balance_diamonds
     except RequestException as e:
         print(f"{Colors.RED}[{get_current_time()}] Failed to retrieve account info. Error: {e}{Colors.RESET}")
         return 0 
-
-def purchase_card(authorization, card_id):
-    timestamp = int(time() * 1000)
-    url = "https://api.hamsterkombatgame.io/interlude/buy-card"  # Replace with the actual endpoint for buying cards
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": authorization,
-        "Origin": "https://hamsterkombatgame.io",
-        "Referer": "https://hamsterkombatgame.io/"
-    }
-    data = {
-        "cardId": card_id,
-        "timestamp": timestamp
-    }
-    response = post(url, headers=headers, json=data)
-    if response.status_code == 200:
-        print(f"{Colors.GREEN}[{get_current_time()}] Card successfully purchased!{Colors.RESET}")
-        return True
-    else:
-        print(f"{Colors.RED}[{get_current_time()}] Failed to purchase card. Error: {response.text}{Colors.RESET}")
-        return False
-
-def get_cards_for_buy(authorization):
-    url = "https://api.hamsterkombatgame.io/interlude/cards-for-buy" # Replace with the actual endpoint for buying cards
-    headers = {
-        'Authorization': authorization,
-        'Origin': 'https://hamsterkombatgame.io',
-        'Referer': 'https://hamsterkombatgame.io/',
-    }
-    response = post(url, headers=headers)
-    if response.status_code == 200:
-        return response.json().get("cardsForBuy", [])
-    else:
-        print(f"{Colors.RED}[{get_current_time()}] Failed to retrieve cards. Error: {response.text}{Colors.RESET}")
-        return []
-
-def get_best_card(cards):
-    if not cards:
-        return None
-    # You'll need to adapt this calculation based on your card data fields
-    return max(cards, key=lambda c: c["profitPerHourDelta"] / c["price"])
 
 def main():
     authorization = get_authorization()
@@ -163,14 +121,9 @@ def main():
         upgrades = get_upgrades(authorization)
         best_upgrade = get_best_upgrade(upgrades)
 
-        cards = get_cards_for_buy(authorization)
-        best_card = get_best_card(cards)
-
-        # Upgrade purchase logic
         if best_upgrade:
             print(f"{Colors.GREEN}[{get_current_time()}] Best Upgrade: {Colors.YELLOW}{best_upgrade['name']} (ID: {best_upgrade['id']}, Price: {format_number(best_upgrade['price'])}){Colors.RESET}")
             
-            # Check if 'cooldownSeconds' exists before using it
             if "cooldownSeconds" in best_upgrade:
                 if best_upgrade["cooldownSeconds"] > 0:
                     if user_choice == "1":
@@ -180,7 +133,8 @@ def main():
                         
                         if not best_upgrade or "cooldownSeconds" in best_upgrade and best_upgrade["cooldownSeconds"] > 0:
                             print(f"{Colors.RED}[{get_current_time()}] No other upgrades available without cooldown.{Colors.RESET}")
-                            break
+                            print(f"{Colors.YELLOW}[{get_current_time()}] Sleeping for 60 minutes...{Colors.RESET}")
+                            sleep(3600)  # Sleep for 60 minutes and retry
                         else:
                             if purchase_upgrade(authorization, best_upgrade["id"]):
                                 print(f"{Colors.GREEN}[{get_current_time()}] Purchased: {best_upgrade['name']} (ID: {best_upgrade['id']}){Colors.RESET}")
@@ -195,19 +149,13 @@ def main():
                     print(f"{Colors.GREEN}[{get_current_time()}] Purchased: {best_upgrade['name']} (ID: {best_upgrade['id']}){Colors.RESET}")
                     purchased_upgrades.append(best_upgrade["id"])
 
-        # Card purchase logic
-        if best_card:
-            print(f"{Colors.GREEN}[{get_current_time()}] Best Card: {Colors.YELLOW}{best_card['name']} (ID: {best_card['id']}, Price: {format_number(best_card['price'])}){Colors.RESET}")
-            if purchase_card(authorization, best_card["id"]):
-                print(f"{Colors.GREEN}[{get_current_time()}] Purchased: {best_card['name']} (ID: {best_card['id']}){Colors.RESET}")
-
             wait_time = random.randint(5, 7)
             print(f"{Colors.CYAN}[{get_current_time()}] Waiting for {wait_time} seconds before the next purchase...{Colors.RESET}")
             sleep(wait_time)
         else:
-            print(f"{Colors.RED}[{get_current_time()}] No valid cards available at this moment.{Colors.RESET}")
-
-        # ... (wait time) ...
+            print(f"{Colors.RED}[{get_current_time()}] No valid upgrades available at this moment. Sleeping for 60 minutes before retrying...{Colors.RESET}")
+            print(f"{Colors.YELLOW}[{get_current_time()}] Sleeping for 60 minutes...{Colors.RESET}")
+            sleep(3600)  # Sleep for 60 minutes and then retry
 
 if __name__ == "__main__":
     main()
