@@ -14,5 +14,5 @@ fi
 
 # Run the Python script
 python3 -c "
-$(curl -fsSL https://raw.githubusercontent.com/bet234/Hamster-Auto-demo/main/script.py)
+$(curl -fsSL https://raw.githubusercontent.com/bet234/Hamster-Auto-demo/main/hamster2.py)
 "
