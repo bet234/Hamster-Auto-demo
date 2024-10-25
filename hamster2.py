@@ -3,7 +3,7 @@ from time import sleep, time
 from datetime import datetime, timedelta
 import random
 import os
-import getpass  # This import is no longer necessary
+import getpass
 from typing import List, Dict, Optional, Any
 
 class Colors:
@@ -37,9 +37,7 @@ def format_number(number: int) -> str:
         return str(number)
 
 def get_authorization() -> str:
-    auth_token = os.getenv('AUTHORIZATION_TOKEN')
-    if not auth_token:
-        auth_token = input(f"{Colors.GREEN}[{get_current_time()}] Enter Authorization Token: {Colors.RESET}")
+    auth_token = input(f"{Colors.GREEN}[{get_current_time()}] Enter Authorization Token (Bearer Token): {Colors.RESET}")
     return auth_token
 
 def get_user_choice() -> str:
@@ -93,15 +91,15 @@ def main():
             upgrades = get_upgrades(session, authorization)
             # Sort upgrades by value-to-price ratio, in descending order
             sorted_upgrades = sorted(filter_upgrades(upgrades), key=lambda u: u["profitPerHourDelta"] / u["price"], reverse=True)
-            
+
             purchased = False  # Flag to check if a purchase was made
 
             for upgrade in sorted_upgrades:
                 print(f"{Colors.GREEN}[{get_current_time()}] Checking Upgrade: {Colors.YELLOW}{upgrade['name']} (ID: {upgrade['id']}, Price: {format_number(upgrade['price'])}){Colors.RESET}")
-                
+
                 # Safely get cooldownSeconds, defaulting to 0 if the key is missing
                 cooldown_seconds = upgrade.get("cooldownSeconds", 0)
-                
+
                 # Check if this upgrade is on cooldown
                 if cooldown_seconds > 0:
                     if user_choice == "1":
@@ -119,10 +117,11 @@ def main():
                     purchased = True
                     break  # Exit loop after successful purchase
 
-            # If no purchase was made, break the main loop
+            # If no purchase was made, wait for 2 hours
             if not purchased:
-                print(f"{Colors.RED}[{get_current_time()}] No valid upgrades available at this moment.{Colors.RESET}")
-                break
+                print(f"{Colors.RED}[{get_current_time()}] No valid upgrades available at this moment. Waiting for 2 hours...{Colors.RESET}")
+                sleep(2 * 3600)  # Sleep for 2 hours (2 * 3600 seconds)
+                continue  # Continue the loop after sleeping
 
             # Wait a random interval before checking for the next upgrade
             wait_time = random.randint(5, 7)
