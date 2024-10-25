@@ -37,9 +37,7 @@ def format_number(number: int) -> str:
         return str(number)
 
 def get_authorization() -> str:
-    auth_token = os.getenv('AUTHORIZATION_TOKEN')
-    if not auth_token:
-        auth_token = getpass.getpass(f"{Colors.GREEN}[{get_current_time()}] Enter Authorization Token: {Colors.RESET}")
+    auth_token = input(f"{Colors.GREEN}[{get_current_time()}] Enter Authorization Token (Bearer Token): {Colors.RESET}")
     return auth_token
 
 def get_user_choice() -> str:
@@ -126,7 +124,7 @@ def main():
                 continue  # Continue the loop after sleeping
 
             # Wait a random interval before checking for the next upgrade
-            wait_time = random.randint(5, 7)
+            wait_time = random.randint(5, 17)
             print(f"{Colors.CYAN}[{get_current_time()}] Waiting {wait_time}s before the next purchase...{Colors.RESET}")
             sleep(wait_time)
 
